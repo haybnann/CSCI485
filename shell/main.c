@@ -1,11 +1,30 @@
+#include <sys/wait.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#define MAX 512
 
 void batchMode(char *argv){
-	printf("The program has been opened in Batch Mode \n");
+	printf("The program has been opened in Batch Mode\n");
 }
 
 void shellMode(){
-	printf("The program has been opened in Shell Mode \n");
+	char command[MAX];
+       	fgets(command, MAX, stdin);
+	while(strcmp(command, "quit") != 0){
+		int status;
+		int cpid = fork();
+		if(cpid == 0){
+			printf("%s", command);
+			exit(1);
+		}
+		else{
+			waitpid(cpid, &status, 0);
+			printf("Done\n");
+		}
+		fgets(command, MAX, stdin);
+	}
 }
 
 int main(int argc, char *argv[]) {
