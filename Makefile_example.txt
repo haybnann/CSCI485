@@ -1,0 +1,37 @@
+
+#Makefile for 
+#Author: 
+#Date: 
+
+#can compile with: gcc -o executablename mainfile.c libfile.c -I.
+
+#this makefile should be in the src directory along with source code
+#subdirectory of src should be obj
+#put .h files in an inlcude directory
+
+IDIR = ../include
+CC = gcc
+#get .h files from include directory
+CFLAGS = -I$(IDIR)
+
+ODIR = obj
+LDIR = ../lib
+
+LIBS=-lm #macro to include libraries such as math
+
+_DEPS = mainfile.h
+DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+
+_OBJ = mainfile.o libfile.o
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+$(ODIR)/%.o: %.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+executablename: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+
+.PHONY: clean
+
+clean:
+	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
