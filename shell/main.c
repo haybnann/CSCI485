@@ -17,14 +17,16 @@ int charCount(char toCount, char *str){
 }
 
 void execComm(char **args){
-	printf("%s", args[0]);
+	//Removes new line in case of enter
+	//int len = strlen(args[0]);
+	//args[0][len-1] = '\0'; 
 	pid_t pid = fork();
 	if(pid == -1){
-		printf("Error with fork");
+		printf("Error with fork \n");
 		//perror("lsh");
 	}else if(pid == 0){
 		if(execvp(args[0], args) < 0){
-			printf("Error with command");
+			printf("Error with command \n");
 		}
 		exit(0);
 	}else{
@@ -38,15 +40,15 @@ void splitSpace(char *command, char** args){
 	char *currArg;
 	if(strstr(command, " ") != NULL){
 		currArg = strtok(command, " ");
-		printf("Here \n");
 		while(currArg != NULL){
-			printf("%d", i);
 			args[i] = currArg;
 			i++;
 			currArg = strtok(command, " ");
 		}
 		args[i] = NULL;
 	} else{
+		//int len = strlen(command);
+		//command[len-1] = '\0';
 		args[0] = command;
 		args[1] = NULL;
 	}
@@ -93,6 +95,8 @@ char *getInput(){
 	char *command = NULL;
 	ssize_t bufferSize = 0;
        	getline(&command, &bufferSize, stdin);
+	int len = strlen(command);
+	command[len-1] = '\0';
 	return command;
 }
 
@@ -100,13 +104,14 @@ void shellMode(){
 	char *command;
 	char *args[100];
 	command = getInput();
-	printf("%s", command);
-	if(strstr(command, ";") != NULL){
-		//What will run if more than one command is found
-	}else{
-		splitSpace(command, args);
-		printf("%s", args[0]);
-		execComm(args);
+	while(strcmp(command, "exit") != 0){
+		if(strstr(command, ";") != NULL){
+			//What will run if more than one command is found
+		}else{
+			splitSpace(command, args);
+			execComm(args);
+		}
+		command = getInput();
 	}
 }
 
