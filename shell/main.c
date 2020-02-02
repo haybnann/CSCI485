@@ -15,15 +15,11 @@ int charCount(char toCount, char *str){
 	}
 	return count;
 }
-
+//Function that actually executes the commands
 void execComm(char **args){
-	//Removes new line in case of enter
-	//int len = strlen(args[0]);
-	//args[0][len-1] = '\0'; 
 	pid_t pid = fork();
 	if(pid == -1){
 		printf("Error with fork \n");
-		//perror("lsh");
 	}else if(pid == 0){
 		if(execvp(args[0], args) < 0){
 			printf("Error with command \n");
@@ -38,6 +34,7 @@ void execComm(char **args){
 void splitSpace(char *command, char** args){
 	int i = 0;
 	char *currArg;
+	//This will seperate up the line into all the different arguements
 	if(strstr(command, " ") != NULL){
 		currArg = strtok(command, " ");
 		while(currArg != NULL){
@@ -47,23 +44,15 @@ void splitSpace(char *command, char** args){
 		}
 		args[i] = NULL;
 	} else{
-		//int len = strlen(command);
-		//command[len-1] = '\0';
 		args[0] = command;
 		args[1] = NULL;
 	}
 }
-
-void parseString(char* command){
+//Seperates the line into different commands if ; is found
+//Code here is untested and should be changed to return 2d array of each
+//command that is seperated
+char  **parseString(char* command){
 	if(strstr(command, ";") != NULL){
-		//int commCount = charCount(';', command);
-		//const char *commands[commCount];
-		//commands[0] = strtok(command, ";");
-		//int i = 1;
-		/*while(i <= commCount){
-			commands[i] = strtok(command, ";");
-			i++;
-		} */
 		char* currCommand;
 		currCommand = strtok(command, ";");
 		while(currCommand != 0){
@@ -74,7 +63,6 @@ void parseString(char* command){
 }
 
 void batchMode(char *argv){
-	//printf("The program has been opened in Batch Mode\n");
 	FILE *fp = fopen(argv, "r");
 	if(fp == NULL){
 		//Error Code Here
@@ -91,6 +79,7 @@ void batchMode(char *argv){
 
 }
 
+//Takes the input from the command line and puts into command
 char *getInput(){
 	char *command = NULL;
 	ssize_t bufferSize = 0;
@@ -105,8 +94,10 @@ void shellMode(){
 	char *args[100];
 	command = getInput();
 	while(strcmp(command, "exit") != 0){
+		//What will run if more than one command is found
+		//Should take 2d Array of commands and run splitSpace and
+		//execComm over each one
 		if(strstr(command, ";") != NULL){
-			//What will run if more than one command is found
 		}else{
 			splitSpace(command, args);
 			execComm(args);
