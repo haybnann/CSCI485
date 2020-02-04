@@ -138,6 +138,7 @@ void shellMode(){
 		//Should take 2d Array of commands and run splitSpace and
 		//execComm over each one
 		if(strstr(command, ";") != NULL){
+			execComm(parseString(command));
 		}else{
 			splitSpace(command, args);
 			execComm(args);
@@ -158,8 +159,17 @@ void displayPrompt(){
 }
 
 int main(int argc, char *argv[]) {//argc =#strings
-
-	displayPrompt();
-	printParsedString(parseString(getInput()));
-		
+ 	while(1){
+		displayPrompt();
+		if(argc < 2){
+			shellMode();
+		}
+		if(argc == 2){
+			batchMode(argv[1]);
+		}
+		if(argc > 2){
+			printf("ERROR: An invalid number of command line arguements were given to the program");
+			return 0;
+		}
+	}
 }
