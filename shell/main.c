@@ -1,33 +1,31 @@
+//Name: main.c
+//Authors: Brayden Faulkner and Hayden Nanny
+//Date: 02/04/2020
+
+
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#define MAX 512
 
-int charCount(char toCount, char *str){
-	int count = 0;
-	int i;
-	size_t len = strlen(str);
-	for(i = 0; i < len; i++){
-		if(str[i] == toCount)
-			count++;
-	}
-	return count;
-}
 //Function that actually executes the commands
 void execComm(char **args){
-	pid_t pid = fork();
-	if(pid == -1){
-		printf("Error with fork \n");
-	}else if(pid == 0){
-		if(execvp(args[0], args) < 0){
-			printf("Error with command \n");
-		}
+	if(strcmp(args[0], "exit") == 0){
 		exit(0);
 	}else{
-		wait(NULL);
-		return;
+		pid_t pid = fork();
+		if(pid == -1){
+			printf("Error with fork \n");
+		}else if(pid == 0){
+			if(execvp(args[0], args) < 0){
+				fprintf(stderr,"Error with command \n");
+			}
+			exit(0);
+		}else{
+			wait(NULL);
+			return;
+		}
 	}
 }
 
@@ -37,13 +35,14 @@ void splitSpace(char *command, char** args){
 	//This will seperate up the line into all the different arguements
 	if(strstr(command, " ") != NULL){
 		currArg = strtok(command, " ");
+		//Loops through the commands to seperate the string on spaces
 		while(currArg != NULL){
 			args[i] = currArg;
 			i++;
 			currArg = strtok(NULL, " ");
 		}
 		args[i] = NULL;
-	} else{
+	} else{ 						//if no spaces are found in the string
 		args[0] = command;
 		args[1] = NULL;
 	}
@@ -100,7 +99,7 @@ void batchMode(char *argv){
 	FILE *fp = fopen(argv, "r");
 	if(fp == NULL){
 		//Error Code Here
-		printf("File %s does not exist", argv);
+		fprintf(stderr, "File %s does not exist", argv);
 		exit(1);
 	}
 	char *line = NULL;
@@ -118,66 +117,60 @@ char *getInput(){
 	char *command = NULL;
 	ssize_t bufferSize = 0;
        	getline(&command, &bufferSize, stdin);
-	if(strcmp(command, "\n") != 0){
+	if(strcmp(command, "\n") == 0){ 			//If input is empty returns nothing
 		return command;
 	}else{
 		int len = strlen(command);
+		//removes the newline character from the end of the input
 		command[len-1] = '\0';
-		printf("%s", command);
 		return command;
 	}
 }
-
+//Function that controls shell mode
 void shellMode(){
+
 	char *command;
 	char *args[100];
+	printf("prompt> ");
+	//reads input from command line
 	command = getInput();
-	if(strcmp(command, "exit") != 0){
+	while(strcmp(command, "exit") != 0){
 		//What will run if more than one command is found
 		//split commands & run concurrently
-		
-	}else{
-		splitSpace(command, args);
-		printf("%s", args[0]);
-		execComm(args);
-		//Should take 2d Array of commands and run splitSpace and
-		//execComm over each one
 		if(strstr(command, ";") != NULL){
-<<<<<<< HEAD
 			char **commands = parseString(command);
+			int x = 0;
+			//Gets numbers of commands in the array
+			int count  = sizeof commands / sizeof commands[0];
+			while(x <= count ){
+				command = commands[x];
+				splitSpace(command, args);
+				execComm(args);
+				x++;
+			}
 		}
 		//Does nothing if command is empty
-		else if(strcmp(command, "\n") != 0){	
-		}
-		else{
-=======
-			execComm(parseString(command));
+		else if(strcmp(command, "\n") == 0){
 		}else{
->>>>>>> 47e53b7c358f7a440234c3956ff2fc702d3feaa8
 			splitSpace(command, args);
 			execComm(args);
 		}
+		printf("prompt> ");
 		command = getInput();
 
 	}
 }
 
-void displayPrompt(){
-	printf("prompt> ");
-}
 
 int main(int argc, char *argv[]) {//argc =#strings
- 	while(1){
-		displayPrompt();
-		if(argc < 2){
-			shellMode();
-		}
-		if(argc == 2){
-			batchMode(argv[1]);
-		}
-		if(argc > 2){
-			printf("ERROR: An invalid number of command line arguements were given to the program");
-			return 0;
-		}
+	if(argc < 2){
+		shellMode();
+	}
+	if(argc == 2){
+		batchMode(argv[1]);
+	}
+	if(argc > 2){			//gives error if too many command line arguements
+		fprintf(stderr, "ERROR: An invalid number of command line arguements were given to the program \n");
+		return 0;
 	}
 }
