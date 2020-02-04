@@ -40,7 +40,7 @@ void splitSpace(char *command, char** args){
 		while(currArg != NULL){
 			args[i] = currArg;
 			i++;
-			currArg = strtok(command, " ");
+			currArg = strtok(NULL, " ");
 		}
 		args[i] = NULL;
 	} else{
@@ -84,9 +84,14 @@ char *getInput(){
 	char *command = NULL;
 	ssize_t bufferSize = 0;
        	getline(&command, &bufferSize, stdin);
-	int len = strlen(command);
-	command[len-1] = '\0';
-	return command;
+	if(strcmp(command, "\n") != 0){
+		return command;
+	}else{
+		int len = strlen(command);
+		command[len-1] = '\0';
+		printf("%s", command);
+		return command;
+	}
 }
 
 void shellMode(){
@@ -98,7 +103,12 @@ void shellMode(){
 		//Should take 2d Array of commands and run splitSpace and
 		//execComm over each one
 		if(strstr(command, ";") != NULL){
-		}else{
+			char **commands = parseString(command);
+		}
+		//Does nothing if command is empty
+		else if(strcmp(command, "\n") != 0){	
+		}
+		else{
 			splitSpace(command, args);
 			execComm(args);
 		}
