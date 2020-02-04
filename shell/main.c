@@ -1,5 +1,5 @@
 //Name: main.c
-//Authors: Brayden Faulkner and Hayden Nanny
+//Authors: Brayden Faulkner and Hayden Nanney
 //Date: 02/04/2020
 
 
@@ -16,7 +16,7 @@ void execComm(char **args){
 	}else{
 		pid_t pid = fork();
 		if(pid == -1){
-			printf("Error with fork \n");
+			fprintf(stderr, "Error with fork \n");
 		}else if(pid == 0){
 			if(execvp(args[0], args) < 0){
 				fprintf(stderr,"Error with command \n");
