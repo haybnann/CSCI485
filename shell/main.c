@@ -18,11 +18,13 @@ int charCount(char toCount, char *str){
 //Function that actually executes the commands
 void execComm(char **args){
 	pid_t pid = fork();
-	if(pid == -1){
+	if(pid <= -1){
 		printf("Error with fork \n");
+		exit(1);
 	}else if(pid == 0){
 		if(execvp(args[0], args) < 0){
 			printf("Error with command \n");
+			exit(1);
 		}
 		exit(0);
 	}else{
@@ -40,7 +42,7 @@ void splitSpace(char *command, char** args){
 		while(currArg != NULL){
 			args[i] = currArg;
 			i++;
-			currArg = strtok(command, " ");
+			currArg = strtok(NULL, " ");
 		}
 		args[i] = NULL;
 	} else{
@@ -127,23 +129,25 @@ void shellMode(){
 	char *command;
 	char *args[100];
 	command = getInput();
-	if(strcmp(command, "exit") != 0){
-		//What will run if more than one command is found
-		//split commands & run concurrently
-		
-	}else{
-		splitSpace(command, args);
-		printf("%s", args[0]);
-		execComm(args);
-		//Should take 2d Array of commands and run splitSpace and
-		//execComm over each one
-		if(strstr(command, ";") != NULL){
-			execComm(parseString(command));
-		}else{
-			splitSpace(command, args);
+	if(strstr(command, ";") != NULL){			//if more than one command
+		printf("%s\n", "parse");
+		int i = 0;
+		char** arr  = parseString(command);		//parse,split and execute commands
+		char* currArg = arr[i];
+		while(currArg != NULL){
+			splitSpace(currArg,args);
 			execComm(args);
+			i++;
+			currArg = arr[i];
 		}
-		command = getInput();
+
+	}else if(strcmp(command, "\n") == 0){			//if empty, do nothing
+		//do nothing
+		printf("%s\n","do nothing");
+	}else{							//else, split on spaces
+		printf("%s\n", "SplitSpace");
+		splitSpace(command, args);
+		execComm(args);
 
 	}
 }
