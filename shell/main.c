@@ -51,6 +51,9 @@ void splitSpace(char *command, char** args){
 		args[1] = NULL;
 	}
 }
+void splitCommands(char *commands, char** args){
+	//for commands split with ';'
+}
 
 void parseString(char* command){
 	if(strstr(command, ";") != NULL){
@@ -103,22 +106,43 @@ void shellMode(){
 	printf("%s", command);
 	if(strstr(command, ";") != NULL){
 		//What will run if more than one command is found
+		//split commands & run concurrently
+		
 	}else{
 		splitSpace(command, args);
 		printf("%s", args[0]);
 		execComm(args);
 	}
 }
+void printDir() 
+{ 
+    char cwd[1024]; 
+    getcwd(cwd, sizeof(cwd)); 
+    printf("\nDir: %s", cwd); 
+} 
 
-int main(int argc, char *argv[]) {
-	if(argc < 2){
-		shellMode();
-	}
-	if(argc == 2){
-		batchMode(argv[1]);
-	}
-	if(argc > 2){
-		printf("ERROR: An invalid number of command line arguements were given to the program");
-		return 0;
-	}
+void displayPrompt(){
+	printf("prompt> ");
 }
+
+void readCommand(){
+	
+}
+
+int main(int argc, char *argv[]) {//argc =#strings
+	printDir();
+}
+			
+/* 	while(1){
+		displayPrompt();
+		if(argc < 2){
+			shellMode();
+		}
+		if(argc == 2){
+			batchMode(argv[1]);
+		}
+		if(argc > 2){
+			printf("ERROR: An invalid number of command line arguements were given to the program");
+			return 0;
+		}
+	} */
