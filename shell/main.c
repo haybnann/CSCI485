@@ -1,9 +1,15 @@
+//Name: main.c
+//Authors: Brayden Faulkner and Hayden Nanney
+//Date: 02/04/2020
+
+
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #define MAX 512
+
 
 
 //Function that actually executes the commands
@@ -46,13 +52,13 @@ void splitSpace(char *command, char** args){
      		}
 		i =0;
 		currArg = strtok(command, " ");
-		while(currArg != NULL ){
+		while(currArg != NULL){
 			args[i] = currArg;
 			i++;
 			currArg = strtok(NULL, " ");
 		}
 		args[i] = NULL;
-	} else{
+	} else{ 						//if no spaces are found in the string
 		args[0] = command;
 		args[1] = NULL;
 	}
@@ -109,7 +115,7 @@ void batchMode(char *argv){
 	FILE *fp = fopen(argv, "r");		//open file
 	if(fp == NULL){
 		//Error Code Here
-		printf("File %s does not exist", argv);
+		fprintf(stderr, "File %s does not exist", argv);
 		exit(1);
 	}
 	char *line;
@@ -165,15 +171,24 @@ char *getInput(){
 	char *command = NULL;
 	ssize_t bufferSize = 0;
        	getline(&command, &bufferSize, stdin);
-	int len = strlen(command);
-	command[len-1] = '\0';
-	return command;
+	if(strcmp(command, "\n") == 0){ 			//If input is empty returns nothing
+		return command;
+	}else{
+		int len = strlen(command);
+		//removes the newline character from the end of the input
+		command[len-1] = '\0';
+		return command;
+	}
 }
-
+//Function that controls shell mode
 void shellMode(){
+
 	char *command;
 	char *args[100];
+
+	//reads input from command line
 	command = getInput();
+
 
 	while(strcmp(command, "quit") != 0){
 		if(strstr(command, ";") != NULL){			//if more than one command
@@ -204,8 +219,10 @@ void shellMode(){
 			execComm(args);
 
 		}
+
 		command = getInput();
 	}
+
 	exit(0);
 }
 
@@ -217,8 +234,8 @@ int main(int argc, char *argv[]) {//argc =#strings
 	if(argc == 2){
 		batchMode(argv[1]);
 	}
-	if(argc > 2){
-		printf("ERROR: An invalid number of command line arguements were given to the program");
+	if(argc > 2){			//gives error if too many command line arguements
+		fprintf(stderr, "ERROR: An invalid number of command line arguements were given to the program \n");
 		return 0;
 	}
 }
