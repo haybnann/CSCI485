@@ -5,16 +5,7 @@
 #include <unistd.h>
 #define MAX 512
 
-int charCount(char toCount, char *str){
-	int count = 0;
-	int i;
-	size_t len = strlen(str);
-	for(i = 0; i < len; i++){
-		if(str[i] == toCount)
-			count++;
-	}
-	return count;
-}
+
 //Function that actually executes the commands
 void execComm(char **args){
 	pid_t pid = fork();
@@ -22,8 +13,10 @@ void execComm(char **args){
 		printf("Error with fork \n");
 		exit(1);
 	}else if(pid == 0){
+		if(args[0] == "\n"){exit(1);}
 		if(execvp(args[0], args) < 0){
 			printf("Error with command \n");
+			printf("%s\n",args[0]);
 			exit(1);
 		}
 		exit(0);
@@ -34,12 +27,26 @@ void execComm(char **args){
 }
 
 void splitSpace(char *command, char** args){
-	int i = 0;
+
 	char *currArg;
 	//This will seperate up the line into all the different arguements
 	if(strstr(command, " ") != NULL){
+		if(command[(strlen(command)-1)] == '\n'){ 			// replace '\n' character
+			 command[(strlen(command) - 1)] ='\0';
+		}
+		if(command[(strlen(command)-1)] == '\r'){ 			// replace '\r' character
+			 command[(strlen(command) - 1)] ='\0';
+		}
+		int i=0;						
+     		while(command[i]!='\0'){					//replace all tabs with a space
+           		if(command[i]=='\t'){
+				command[i]=' ';
+           		}  
+           		i++; 
+     		}
+		i =0;
 		currArg = strtok(command, " ");
-		while(currArg != NULL){
+		while(currArg != NULL ){
 			args[i] = currArg;
 			i++;
 			currArg = strtok(NULL, " ");
@@ -99,24 +106,62 @@ void printParsedString(char** strArr){
 }
 
 void batchMode(char *argv){
-	FILE *fp = fopen(argv, "r");
+	FILE *fp = fopen(argv, "r");		//open file
 	if(fp == NULL){
 		//Error Code Here
 		printf("File %s does not exist", argv);
 		exit(1);
 	}
-	char *line = NULL;
+	char *line;
 	size_t len = 0;
 	ssize_t read;
+	char *args[100];
+	args[0] =NULL;
+	
+	while((read = (getline(&line, &len, fp)) != -1)){
+		if(line[(strlen(line)-1)] == '\n'){ 			// replace '\n' character
+			 line[(strlen(line) - 1)] ='\0';
+		}
+		if(line[(strlen(line)-1)] == '\r'){ 			// replace '\n' character
+			 line[(strlen(line) - 1)] ='\0';
+		}
+		int i =0;
+		while(line[i]!='\0'){					//replace all tabs with a space
+           		if(line[i]=='\t'){
+				line[i]=' ';
+           		}  
+           		i++; 
+     		}
 
-	while(read = (getline(&line, &len, fp) != -1)){
-		printf("%s", line);
+		if(strstr(line, ";") != NULL ){		//if more than one command, use parser
+			int j = 0;
+			char** arr  	= parseString(line);					//parse and split, return array of strings
+			char* currArg 	= arr[j];						//assign first string to currentArg
+			while(currArg != NULL && *currArg != '\n'&& (strcmp(currArg, "quit") != 0)){				//iterate through all string commands
+				splitSpace(currArg,args);					//split commands into parts
+				execComm(args);							//execute the commands
+				j++;								//increment to next string
+				currArg = arr[j];
+			}
+			/*if(strcmp(currArg, "quit") != 0){ 
+				//wait till the others finish
+				exit(0);
+			}*/
+		}else{					//else, split on spaces
+			args[0] = NULL;
+			splitSpace(line, args);
+			execComm(args);
+		}
 	}
+	//free(line);		//free allocated space
+	fclose(fp);		//close file stream
+	//exit(0);		//exit successfully at end of file
 
 }
 
 //Takes the input from the command line and puts into command
 char *getInput(){
+	printf("%s", "prompt>");
 	char *command = NULL;
 	ssize_t bufferSize = 0;
        	getline(&command, &bufferSize, stdin);
@@ -129,45 +174,51 @@ void shellMode(){
 	char *command;
 	char *args[100];
 	command = getInput();
-	if(strstr(command, ";") != NULL){			//if more than one command
-		printf("%s\n", "parse");
-		int i = 0;
-		char** arr  = parseString(command);		//parse,split and execute commands
-		char* currArg = arr[i];
-		while(currArg != NULL){
-			splitSpace(currArg,args);
+
+	while(strcmp(command, "quit") != 0){
+		if(strstr(command, ";") != NULL){			//if more than one command
+
+			int i=0;						
+     			while(command[i]!='\0'){					//replace all tabs with a space
+           			if(command[i]=='\t'){
+					command[i]=' ';
+           			}  
+           			i++; 
+     			}
+
+			i = 0;
+			char** arr  = parseString(command);		//parse,split and execute commands
+			char* currArg = arr[i];
+			while(currArg != NULL){				//last element was assigned to be NULL 
+				splitSpace(currArg,args);
+				if(*args == "quit"){break;}
+				execComm(args);
+				i++;
+				currArg = arr[i];
+			}
+
+		}else if(strcmp(command, "\n") == 0){			//if empty, do nothing
+			//do nothing
+		}else{							//else, split on spaces
+			splitSpace(command, args);
 			execComm(args);
-			i++;
-			currArg = arr[i];
+
 		}
-
-	}else if(strcmp(command, "\n") == 0){			//if empty, do nothing
-		//do nothing
-		printf("%s\n","do nothing");
-	}else{							//else, split on spaces
-		printf("%s\n", "SplitSpace");
-		splitSpace(command, args);
-		execComm(args);
-
+		command = getInput();
 	}
-}
-
-void displayPrompt(){
-	printf("prompt> ");
+	exit(0);
 }
 
 int main(int argc, char *argv[]) {//argc =#strings
- 	while(1){
-		displayPrompt();
-		if(argc < 2){
-			shellMode();
-		}
-		if(argc == 2){
-			batchMode(argv[1]);
-		}
-		if(argc > 2){
-			printf("ERROR: An invalid number of command line arguements were given to the program");
-			return 0;
-		}
+
+	if(argc < 2){
+		shellMode();
+	}
+	if(argc == 2){
+		batchMode(argv[1]);
+	}
+	if(argc > 2){
+		printf("ERROR: An invalid number of command line arguements were given to the program");
+		return 0;
 	}
 }
