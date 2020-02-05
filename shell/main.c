@@ -161,7 +161,7 @@ void batchMode(char *argv){
 	}
 	//free(line);		//free allocated space
 	fclose(fp);		//close file stream
-	//exit(0);		//exit successfully at end of file
+	exit(0);		//exit successfully at end of file
 
 }
 
